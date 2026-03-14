@@ -534,8 +534,8 @@ This plan implements a serverless web application for the Boise Bicycle Project'
 - [x] 30. Checkpoint — All admin features
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 31. CI/CD — GitHub Actions pipelines
-  - [ ] 31.1 Create backend deployment pipeline
+- [x] 31. CI/CD — GitHub Actions pipelines
+  - [x] 31.1 Create backend deployment pipeline
     - GitHub Actions workflow triggered on pushes to main branch (backend paths)
     - Install Python dependencies, run linting (flake8/ruff), run pytest test suite
     - Halt on any lint or test failure — do NOT deploy
@@ -546,7 +546,7 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 12.1, 12.2, 12.3, 12.5, 12.6, 12.7, 12.8, 12.9, 12.10_
     - _Agent Skills: `aws-cdk-development`, `iam`, `lambda`_
 
-  - [ ] 31.2 Create frontend deployment pipeline
+  - [x] 31.2 Create frontend deployment pipeline
     - GitHub Actions workflow triggered on pushes to main branch (frontend paths)
     - Install Node dependencies, run linting (ESLint), run Vitest test suite
     - Halt on any lint or test failure — do NOT deploy
@@ -557,14 +557,14 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.8, 12.9, 12.10_
     - _Agent Skills: `aws-cdk-development`, `iam`, `s3`_
 
-  - [ ] 31.3 Write tests to validate pipeline configuration
+  - [x] 31.3 Write tests to validate pipeline configuration
     - Test that OIDC federation is configured correctly
     - Test that deployment halts on lint/test failure
     - _Requirements: 12.3, 12.8_
     - _Agent Skills: `iam`_
 
-- [ ] 32. Security hardening and final validation
-  - [ ] 32.1 Verify all encryption and security controls
+- [x] 32. Security hardening and final validation
+  - [x] 32.1 Verify all encryption and security controls
     - Confirm DynamoDB encryption at rest (AES-256) on all tables
     - Confirm S3 SSE on all buckets
     - Confirm CloudFront HTTPS-only and TLS 1.2+
@@ -579,7 +579,7 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5, 16.6, 16.7, 16.8, 16.9, 16.10, 16.11, 16.12, 16.13_
     - _Agent Skills: `iam`, `s3`, `dynamodb`, `api-gateway`, `cognito`, `lambda`, `cloudwatch`_
 
-  - [ ] 32.2 Write integration tests for security controls
+  - [x] 32.2 Write integration tests for security controls
     - Test unauthenticated requests to protected endpoints return 401
     - Test unauthorized role access returns 403
     - Test reporter year scoping returns only authorized data
@@ -587,7 +587,7 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 14.6, 14.8, 14.10, 16.7_
     - _Agent Skills: `api-gateway`, `cognito`, `lambda`_
 
-- [ ] 33. Final checkpoint — Full system validation
+- [x] 33. Final checkpoint — Full system validation
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

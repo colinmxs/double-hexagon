@@ -1,0 +1,69 @@
+name: Frontend Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint (ESLint)
+        working-directory: frontend
+        run: npx eslint . --max-warnings 0
+
+      - name: Run tests
+        working-directory: frontend
+        run: npx vitest run
+
+      - name: Build
+        if: success()
+        working-directory: frontend
+        run: npm run build
+
+      - name: Configure AWS credentials (OIDC)
+        if: success()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to S3
+        if: success()
+        run: aws s3 sync frontend/dist/ s3://bbp-hkbg-static/ --delete
+
+      - name: Invalidate CloudFront cache
+        if: success()
+        run: |
+          DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[?DomainName=='bbp-hkbg-static.s3.amazonaws.com']].Id" --output text)
+          if [ -n "$DIST_ID" ]; then
+            aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths "/*"
+          fi
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "## Frontend Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ✅ Deployed" >> $GITHUB_STEP_SUMMARY

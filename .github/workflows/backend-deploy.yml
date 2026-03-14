@@ -1,0 +1,78 @@
+name: Backend Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lambda/**'
+      - 'infra/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: pip install pytest moto boto3
+
+      - name: Lint (ruff)
+        run: |
+          pip install ruff
+          ruff check lambda/
+
+      - name: Run tests
+        run: |
+          failed=0
+          for d in lambda/*/; do
+            if [ -f "$d/test_handler.py" ]; then
+              python -m pytest "$d" --tb=short -q || failed=1
+            fi
+          done
+          # Shared module tests
+          if [ -d "lambda/shared" ]; then
+            python -m pytest lambda/shared/ --tb=short -q || failed=1
+          fi
+          if [ $failed -ne 0 ]; then exit 1; fi
+
+      - name: Configure AWS credentials (OIDC)
+        if: success()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: actions/setup-node@v4
+        if: success()
+        with:
+          node-version: '20'
+
+      - name: Install CDK dependencies
+        if: success()
+        working-directory: infra
+        run: npm ci
+
+      - name: CDK deploy
+        if: success()
+        working-directory: infra
+        run: npx cdk deploy --all --require-approval never
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "## Backend Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ✅ Deployed" >> $GITHUB_STEP_SUMMARY
