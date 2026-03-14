@@ -44,7 +44,6 @@ class TestCorsHeaders:
 
     def test_contains_allow_origin(self):
         assert "Access-Control-Allow-Origin" in CORS_HEADERS
-        assert CORS_HEADERS["Access-Control-Allow-Origin"] == "*"
 
     def test_contains_allow_headers(self):
         assert "Access-Control-Allow-Headers" in CORS_HEADERS

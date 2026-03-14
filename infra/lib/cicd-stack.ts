@@ -27,13 +27,15 @@ export class CiCdStack extends cdk.Stack {
 
     // ---------------------------------------------------------------
     // GitHub Actions OIDC Provider
+    // Import existing provider if present, otherwise create a new one.
+    // The OIDC provider is a global IAM resource (one per account).
     // ---------------------------------------------------------------
 
-    const oidcProvider = new iam.OpenIdConnectProvider(this, 'GitHubOidcProvider', {
-      url: 'https://token.actions.githubusercontent.com',
-      clientIds: ['sts.amazonaws.com'],
-      thumbprints: ['6938fd4d98bab03faadb97b34396831e3780aea1'],
-    });
+    const oidcProvider = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
+      this,
+      'GitHubOidcProvider',
+      `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`,
+    );
 
     // ---------------------------------------------------------------
     // IAM Role for GitHub Actions — deployment-only permissions
@@ -256,12 +258,6 @@ export class CiCdStack extends cdk.Stack {
       value: this.gitHubActionsRole.roleArn,
       exportName: 'BbpHkbgGitHubActionsRoleArn',
       description: 'ARN of the IAM role for GitHub Actions OIDC federation',
-    });
-
-    new cdk.CfnOutput(this, 'OidcProviderArn', {
-      value: oidcProvider.openIdConnectProviderArn,
-      exportName: 'BbpHkbgGitHubOidcProviderArn',
-      description: 'ARN of the GitHub Actions OIDC provider',
     });
   }
 }

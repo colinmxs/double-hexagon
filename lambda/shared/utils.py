@@ -26,11 +26,34 @@ import boto3
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-CORS_HEADERS = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-}
+ALLOWED_ORIGINS = os.environ.get(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:4173",
+).split(",")
+
+
+def _get_cors_headers(origin=None):
+    """Return CORS headers, reflecting the request origin if it is allowed.
+
+    If ALLOWED_ORIGINS contains '*', any origin is accepted.
+    Otherwise only origins present in the allow-list are reflected back.
+    """
+    if "*" in ALLOWED_ORIGINS:
+        allow_origin = "*"
+    elif origin and origin in ALLOWED_ORIGINS:
+        allow_origin = origin
+    else:
+        allow_origin = ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else ""
+    return {
+        "Access-Control-Allow-Origin": allow_origin,
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+        "Vary": "Origin",
+    }
+
+
+# Default CORS headers kept for backward compatibility with tests
+CORS_HEADERS = _get_cors_headers()
 
 
 def get_dynamodb_table(table_name):
@@ -107,24 +130,26 @@ def generate_application_id():
     return f"{time_part}{random_part}"
 
 
-def build_success_response(body, status_code=200):
+def build_success_response(body, status_code=200, event=None):
     """Build an API Gateway proxy success response with JSON body and CORS headers.
 
     Args:
         body: Dict or list to serialize as JSON response body.
         status_code: HTTP status code (default 200).
+        event: Optional API Gateway event to extract Origin header from.
 
     Returns:
         dict: API Gateway proxy response.
     """
+    origin = _extract_origin(event)
     return {
         "statusCode": status_code,
-        "headers": {**CORS_HEADERS, "Content-Type": "application/json"},
+        "headers": {**_get_cors_headers(origin), "Content-Type": "application/json"},
         "body": json.dumps(body),
     }
 
 
-def build_error_response(status_code, message):
+def build_error_response(status_code, message, event=None):
     """Build an API Gateway proxy error response with CORS headers.
 
     Error messages must NEVER contain PII (Requirement 16.10).
@@ -132,15 +157,26 @@ def build_error_response(status_code, message):
     Args:
         status_code: HTTP status code (e.g. 400, 404, 500).
         message: A safe, generic error message with no PII.
+        event: Optional API Gateway event to extract Origin header from.
 
     Returns:
         dict: API Gateway proxy response.
     """
+    origin = _extract_origin(event)
     return {
         "statusCode": status_code,
-        "headers": {**CORS_HEADERS, "Content-Type": "application/json"},
+        "headers": {**_get_cors_headers(origin), "Content-Type": "application/json"},
         "body": json.dumps({"error": message}),
     }
+
+
+def _extract_origin(event):
+    """Extract the Origin header from an API Gateway event (case-insensitive)."""
+    if not event:
+        return None
+    headers = event.get("headers") or {}
+    # API Gateway may lowercase header names
+    return headers.get("origin") or headers.get("Origin")
 
 
 def parse_request_body(event):

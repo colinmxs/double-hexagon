@@ -756,5 +756,5 @@ class TestErrorHandling:
         event = _make_event(body=body)
         result = handler(event, None)
 
-        assert result["headers"]["Access-Control-Allow-Origin"] == "*"
+        assert "Access-Control-Allow-Origin" in result["headers"]
         del os.environ["DOCUMENTS_BUCKET"]

@@ -15,6 +15,7 @@ Requirements: 14.3, 14.6, 14.10
 
 import functools
 import json
+import os
 
 try:
     from shared.auth_middleware import AuthError, authenticate
@@ -22,14 +23,32 @@ except ImportError:
     from auth_middleware import AuthError, authenticate
 
 
-CORS_HEADERS = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-}
+ALLOWED_ORIGINS = os.environ.get(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:4173",
+).split(",")
 
 
-def build_error_response(status_code, message):
+def _get_cors_headers(origin=None):
+    """Return CORS headers, reflecting the request origin if it is allowed."""
+    if "*" in ALLOWED_ORIGINS:
+        allow_origin = "*"
+    elif origin and origin in ALLOWED_ORIGINS:
+        allow_origin = origin
+    else:
+        allow_origin = ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else ""
+    return {
+        "Access-Control-Allow-Origin": allow_origin,
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+        "Vary": "Origin",
+    }
+
+
+CORS_HEADERS = _get_cors_headers()
+
+
+def build_error_response(status_code, message, event=None):
     """Build an API Gateway proxy response with JSON body and CORS headers.
 
     Error messages must never contain PII (Requirement 16.10).
@@ -37,13 +56,18 @@ def build_error_response(status_code, message):
     Args:
         status_code: HTTP status code (e.g. 403, 401, 500).
         message: A safe, generic error message with no PII.
+        event: Optional API Gateway event to extract Origin header from.
 
     Returns:
         dict: API Gateway proxy response.
     """
+    origin = None
+    if event:
+        headers = event.get("headers") or {}
+        origin = headers.get("origin") or headers.get("Origin")
     return {
         "statusCode": status_code,
-        "headers": {**CORS_HEADERS, "Content-Type": "application/json"},
+        "headers": {**_get_cors_headers(origin), "Content-Type": "application/json"},
         "body": json.dumps({"error": message}),
     }
 

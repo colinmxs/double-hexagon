@@ -560,11 +560,30 @@ def _generate_csv(columns, rows):
     return output.getvalue()
 
 
-CORS_HEADERS = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-}
+ALLOWED_ORIGINS = os.environ.get(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:4173",
+).split(",")
+
+
+def _get_export_cors_headers(event=None):
+    """Return CORS headers for the export handler, reflecting the request origin."""
+    origin = None
+    if event:
+        headers = event.get("headers") or {}
+        origin = headers.get("origin") or headers.get("Origin")
+    if "*" in ALLOWED_ORIGINS:
+        allow_origin = "*"
+    elif origin and origin in ALLOWED_ORIGINS:
+        allow_origin = origin
+    else:
+        allow_origin = ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else ""
+    return {
+        "Access-Control-Allow-Origin": allow_origin,
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+        "Vary": "Origin",
+    }
 
 
 @require_role("admin", "reporter")
@@ -685,7 +704,7 @@ def export_handler(event, context, user_context):
     return {
         "statusCode": 200,
         "headers": {
-            **CORS_HEADERS,
+            **_get_export_cors_headers(event),
             "Content-Type": "text/csv",
             "Content-Disposition": "attachment; filename=\"report_export.csv\"",
         },

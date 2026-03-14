@@ -14,6 +14,8 @@ export interface ApiStackProps extends cdk.StackProps {
   storageStack: StorageStack;
   /** Reference to the AuthStack */
   authStack: AuthStack;
+  /** Allowed CORS origins (e.g. ['https://app.example.com', 'http://localhost:5173']) */
+  allowedOrigins?: string[];
 }
 
 export class ApiStack extends cdk.Stack {
@@ -43,6 +45,9 @@ export class ApiStack extends cdk.Stack {
 
     const { storageStack, authStack } = props;
 
+    const allowedOrigins = props.allowedOrigins ?? ['http://localhost:5173', 'http://localhost:4173'];
+    const allowedOriginsEnv = allowedOrigins.join(',');
+
     // Shorthand references
     const applicationsTable = storageStack.applicationsTable;
     const auditLogTable = storageStack.auditLogTable;
@@ -67,7 +72,7 @@ export class ApiStack extends cdk.Stack {
         throttlingBurstLimit: 200,
       },
       defaultCorsPreflightOptions: {
-        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowOrigins: allowedOrigins,
         allowMethods: apigateway.Cors.ALL_METHODS,
         allowHeaders: [
           'Content-Type',
@@ -380,6 +385,19 @@ export class ApiStack extends cdk.Stack {
       },
     });
     usersTable.grantReadData(this.getAuthMeFn);
+
+    // ---------------------------------------------------------------
+    // Inject ALLOWED_ORIGINS into all Lambda functions
+    // ---------------------------------------------------------------
+    const allFunctions = [
+      this.submitApplicationFn, this.generatePresignedUrlFn, this.processDocumentFn,
+      this.getApplicationsFn, this.getApplicationDetailFn, this.updateApplicationFn,
+      this.exportDataFn, this.manageReportsFn, this.runReportFn, this.getCostDataFn,
+      this.manageUsersFn, this.getAuditLogFn, this.manageGiveawayYearFn, this.getAuthMeFn,
+    ];
+    for (const fn of allFunctions) {
+      fn.addEnvironment('ALLOWED_ORIGINS', allowedOriginsEnv);
+    }
 
     // ---------------------------------------------------------------
     // S3 Event Notification — trigger process_document on uploads/

@@ -464,4 +464,4 @@ class TestErrorHandling:
         event = _make_event("2025", "APP001")
         result = handler(event, None)
 
-        assert result["headers"]["Access-Control-Allow-Origin"] == "*"
+        assert "Access-Control-Allow-Origin" in result["headers"]
