@@ -1,0 +1,34 @@
+{
+  "version": "52.0.0",
+  "files": {
+    "d75c48c9f82cde63e9bf414df335e84e8ac24f11eb34889be255b702aec71e50": {
+      "displayName": "BbpHkbgCiCdStack/Custom::AWSCDKOpenIdConnectProviderCustomResourceProvider Code",
+      "source": {
+        "path": "asset.d75c48c9f82cde63e9bf414df335e84e8ac24f11eb34889be255b702aec71e50",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "current_account-current_region-2eb8d84a": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
+          "objectKey": "d75c48c9f82cde63e9bf414df335e84e8ac24f11eb34889be255b702aec71e50.zip",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
+        }
+      }
+    },
+    "69412536c83717c5e5226af5d72c4fa380c1d5d477c740d44bf3e16cd344f275": {
+      "displayName": "BbpHkbgCiCdStack Template",
+      "source": {
+        "path": "BbpHkbgCiCdStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-current_region-ca8786ad": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
+          "objectKey": "69412536c83717c5e5226af5d72c4fa380c1d5d477c740d44bf3e16cd344f275.json",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

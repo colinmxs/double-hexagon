@@ -1,0 +1,318 @@
+{
+  "/BbpHkbgStorageStack/Custom::S3AutoDeleteObjectsCustomResourceProvider": [
+    {
+      "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+      "data": true
+    }
+  ],
+  "/BbpHkbgStorageStack/DocumentsBucketName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DocumentsBucketName"
+    }
+  ],
+  "/BbpHkbgStorageStack/DocumentsBucketArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DocumentsBucketArn"
+    }
+  ],
+  "/BbpHkbgStorageStack/StaticSiteBucketName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "StaticSiteBucketName"
+    }
+  ],
+  "/BbpHkbgStorageStack/StaticSiteUrl": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "StaticSiteUrl"
+    }
+  ],
+  "/BbpHkbgStorageStack/ApplicationsTable": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "ApplicationsTable27AC2163"
+      }
+    }
+  ],
+  "/BbpHkbgStorageStack/AuditLogTable": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "AuditLogTable8B03E3C8"
+      }
+    }
+  ],
+  "/BbpHkbgStorageStack/UsersTable": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "UsersTable9725E9C8"
+      }
+    }
+  ],
+  "/BbpHkbgStorageStack/SavedReportsTable": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "SavedReportsTable9E991FF8"
+      }
+    }
+  ],
+  "/BbpHkbgStorageStack/ConfigTable": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "ConfigTable5CD72349"
+      }
+    }
+  ],
+  "/BbpHkbgStorageStack/ApplicationsTableName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApplicationsTableName"
+    }
+  ],
+  "/BbpHkbgStorageStack/ApplicationsTableArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApplicationsTableArn"
+    }
+  ],
+  "/BbpHkbgStorageStack/AuditLogTableName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuditLogTableName"
+    }
+  ],
+  "/BbpHkbgStorageStack/AuditLogTableArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuditLogTableArn"
+    }
+  ],
+  "/BbpHkbgStorageStack/UsersTableName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "UsersTableName"
+    }
+  ],
+  "/BbpHkbgStorageStack/UsersTableArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "UsersTableArn"
+    }
+  ],
+  "/BbpHkbgStorageStack/SavedReportsTableName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SavedReportsTableName"
+    }
+  ],
+  "/BbpHkbgStorageStack/SavedReportsTableArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SavedReportsTableArn"
+    }
+  ],
+  "/BbpHkbgStorageStack/ConfigTableName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ConfigTableName"
+    }
+  ],
+  "/BbpHkbgStorageStack/ConfigTableArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ConfigTableArn"
+    }
+  ],
+  "/BbpHkbgStorageStack/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    }
+  ],
+  "/BbpHkbgStorageStack/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    }
+  ],
+  "/BbpHkbgStorageStack/DocumentsBucket/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DocumentsBucket9EC9DEB9"
+    }
+  ],
+  "/BbpHkbgStorageStack/StaticSiteBucket/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "StaticSiteBucket8958EE3F"
+    },
+    {
+      "type": "aws:cdk:analytics:mixin",
+      "data": {
+        "mixin": "aws-cdk-lib.aws_s3.mixins.BucketAutoDeleteObjects"
+      }
+    }
+  ],
+  "/BbpHkbgStorageStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+    }
+  ],
+  "/BbpHkbgStorageStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F"
+    }
+  ],
+  "/BbpHkbgStorageStack/ApplicationsTable/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApplicationsTable27AC2163"
+    }
+  ],
+  "/BbpHkbgStorageStack/AuditLogTable/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuditLogTable8B03E3C8"
+    }
+  ],
+  "/BbpHkbgStorageStack/UsersTable/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "UsersTable9725E9C8"
+    }
+  ],
+  "/BbpHkbgStorageStack/SavedReportsTable/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SavedReportsTable9E991FF8"
+    }
+  ],
+  "/BbpHkbgStorageStack/ConfigTable/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ConfigTable5CD72349"
+    }
+  ],
+  "/BbpHkbgStorageStack/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    }
+  ],
+  "/BbpHkbgStorageStack/CDKMetadata/Condition": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadataAvailable"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Fn::GetAtt\":[\"ApplicationsTable27AC2163\",\"Arn\"]}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputFnGetAttApplicationsTable27AC2163Arn2EBCB236"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Fn::GetAtt\":[\"AuditLogTable8B03E3C8\",\"Arn\"]}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputFnGetAttAuditLogTable8B03E3C8Arn985A1088"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Ref\":\"ApplicationsTable27AC2163\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefApplicationsTable27AC2163EA08CD35"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Ref\":\"AuditLogTable8B03E3C8\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefAuditLogTable8B03E3C8EAC7CA55"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Fn::GetAtt\":[\"DocumentsBucket9EC9DEB9\",\"Arn\"]}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputFnGetAttDocumentsBucket9EC9DEB9ArnEA5095A7"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Ref\":\"DocumentsBucket9EC9DEB9\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefDocumentsBucket9EC9DEB9131399C0"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Fn::GetAtt\":[\"UsersTable9725E9C8\",\"Arn\"]}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputFnGetAttUsersTable9725E9C8Arn5684EF99"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Ref\":\"UsersTable9725E9C8\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefUsersTable9725E9C857961836"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Fn::GetAtt\":[\"SavedReportsTable9E991FF8\",\"Arn\"]}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputFnGetAttSavedReportsTable9E991FF8Arn2E4501F7"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Ref\":\"SavedReportsTable9E991FF8\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefSavedReportsTable9E991FF882E1C390"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Fn::GetAtt\":[\"ConfigTable5CD72349\",\"Arn\"]}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputFnGetAttConfigTable5CD72349Arn5AD5B2DA"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Ref\":\"ConfigTable5CD72349\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefConfigTable5CD7234972E583FB"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Ref\":\"StaticSiteBucket8958EE3F\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefStaticSiteBucket8958EE3FA2C90592"
+    }
+  ],
+  "/BbpHkbgStorageStack/Exports/Output{\"Fn::GetAtt\":[\"StaticSiteBucket8958EE3F\",\"Arn\"]}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputFnGetAttStaticSiteBucket8958EE3FArn001B5304"
+    }
+  ],
+  "/BbpHkbgStorageStack/StaticSiteBucket/Policy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "StaticSiteBucketPolicy54AA1C72"
+    },
+    {
+      "type": "aws:cdk:analytics:mixin",
+      "data": {
+        "mixin": "aws-cdk-lib.aws_s3.mixins.BucketPolicyStatements"
+      }
+    }
+  ],
+  "/BbpHkbgStorageStack/StaticSiteBucket/AutoDeleteObjectsCustomResource/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "StaticSiteBucketAutoDeleteObjectsCustomResource2478938F"
+    }
+  ]
+}

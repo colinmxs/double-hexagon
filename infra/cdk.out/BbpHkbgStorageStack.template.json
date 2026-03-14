@@ -1,0 +1,1090 @@
+{
+ "Description": "BBP HKBG - S3 buckets and DynamoDB tables for application data storage",
+ "Resources": {
+  "DocumentsBucket9EC9DEB9": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketEncryption": {
+     "ServerSideEncryptionConfiguration": [
+      {
+       "ServerSideEncryptionByDefault": {
+        "SSEAlgorithm": "AES256"
+       }
+      }
+     ]
+    },
+    "BucketName": "bbp-hkbg-documents",
+    "LifecycleConfiguration": {
+     "Rules": [
+      {
+       "Id": "GlacierTransition",
+       "Prefix": "uploads/",
+       "Status": "Enabled",
+       "Transitions": [
+        {
+         "StorageClass": "GLACIER",
+         "TransitionInDays": 365
+        }
+       ]
+      },
+      {
+       "Id": "DrawingsGlacierTransition",
+       "Prefix": "drawings/",
+       "Status": "Enabled",
+       "Transitions": [
+        {
+         "StorageClass": "GLACIER",
+         "TransitionInDays": 365
+        }
+       ]
+      },
+      {
+       "Id": "VersionsGlacierTransition",
+       "Prefix": "versions/",
+       "Status": "Enabled",
+       "Transitions": [
+        {
+         "StorageClass": "GLACIER",
+         "TransitionInDays": 365
+        }
+       ]
+      },
+      {
+       "ExpirationInDays": 7,
+       "Id": "ExportsCleanup",
+       "Prefix": "exports/",
+       "Status": "Enabled"
+      }
+     ]
+    },
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    }
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "BbpHkbgStorageStack/DocumentsBucket/Resource"
+   }
+  },
+  "StaticSiteBucket8958EE3F": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketEncryption": {
+     "ServerSideEncryptionConfiguration": [
+      {
+       "ServerSideEncryptionByDefault": {
+        "SSEAlgorithm": "AES256"
+       }
+      }
+     ]
+    },
+    "BucketName": "bbp-hkbg-static",
+    "Tags": [
+     {
+      "Key": "aws-cdk:auto-delete-objects",
+      "Value": "true"
+     }
+    ],
+    "WebsiteConfiguration": {
+     "ErrorDocument": "index.html",
+     "IndexDocument": "index.html"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "BbpHkbgStorageStack/StaticSiteBucket/Resource"
+   }
+  },
+  "StaticSiteBucketPolicy54AA1C72": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "StaticSiteBucket8958EE3F"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:PutBucketPolicy",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::GetAtt": [
+          "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+          "Arn"
+         ]
+        }
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "StaticSiteBucket8958EE3F",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "StaticSiteBucket8958EE3F",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BbpHkbgStorageStack/StaticSiteBucket/Policy/Resource"
+   }
+  },
+  "StaticSiteBucketAutoDeleteObjectsCustomResource2478938F": {
+   "Type": "Custom::S3AutoDeleteObjects",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "StaticSiteBucket8958EE3F"
+    }
+   },
+   "DependsOn": [
+    "StaticSiteBucketPolicy54AA1C72"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "BbpHkbgStorageStack/StaticSiteBucket/AutoDeleteObjectsCustomResource/Default"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "BbpHkbgStorageStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 128,
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs22.x",
+    "Description": {
+     "Fn::Join": [
+      "",
+      [
+       "Lambda function for auto-deleting objects in ",
+       {
+        "Ref": "StaticSiteBucket8958EE3F"
+       },
+       " S3 bucket."
+      ]
+     ]
+    }
+   },
+   "DependsOn": [
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "BbpHkbgStorageStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler",
+    "aws:asset:path": "asset.faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6",
+    "aws:asset:property": "Code"
+   }
+  },
+  "ApplicationsTable27AC2163": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "giveaway_year",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "application_id",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "status",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "referring_agency_name",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "GlobalSecondaryIndexes": [
+     {
+      "IndexName": "status-index",
+      "KeySchema": [
+       {
+        "AttributeName": "giveaway_year",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "status",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     },
+     {
+      "IndexName": "agency-index",
+      "KeySchema": [
+       {
+        "AttributeName": "giveaway_year",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "referring_agency_name",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     }
+    ],
+    "KeySchema": [
+     {
+      "AttributeName": "giveaway_year",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "application_id",
+      "KeyType": "RANGE"
+     }
+    ],
+    "SSESpecification": {
+     "SSEEnabled": true
+    },
+    "TableName": "bbp-hkbg-applications"
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "BbpHkbgStorageStack/ApplicationsTable/Resource"
+   }
+  },
+  "AuditLogTable8B03E3C8": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "year_month",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "timestamp#user_id",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "user_id",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "timestamp",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "action_type",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "GlobalSecondaryIndexes": [
+     {
+      "IndexName": "user-index",
+      "KeySchema": [
+       {
+        "AttributeName": "user_id",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "timestamp",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     },
+     {
+      "IndexName": "action-index",
+      "KeySchema": [
+       {
+        "AttributeName": "action_type",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "timestamp",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     }
+    ],
+    "KeySchema": [
+     {
+      "AttributeName": "year_month",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "timestamp#user_id",
+      "KeyType": "RANGE"
+     }
+    ],
+    "SSESpecification": {
+     "SSEEnabled": true
+    },
+    "TableName": "bbp-hkbg-audit-log"
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "BbpHkbgStorageStack/AuditLogTable/Resource"
+   }
+  },
+  "UsersTable9725E9C8": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "user_id",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "email",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "GlobalSecondaryIndexes": [
+     {
+      "IndexName": "email-index",
+      "KeySchema": [
+       {
+        "AttributeName": "email",
+        "KeyType": "HASH"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     }
+    ],
+    "KeySchema": [
+     {
+      "AttributeName": "user_id",
+      "KeyType": "HASH"
+     }
+    ],
+    "SSESpecification": {
+     "SSEEnabled": true
+    },
+    "TableName": "bbp-hkbg-users"
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "BbpHkbgStorageStack/UsersTable/Resource"
+   }
+  },
+  "SavedReportsTable9E991FF8": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "user_id",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "report_id",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "KeySchema": [
+     {
+      "AttributeName": "user_id",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "report_id",
+      "KeyType": "RANGE"
+     }
+    ],
+    "SSESpecification": {
+     "SSEEnabled": true
+    },
+    "TableName": "bbp-hkbg-saved-reports"
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "BbpHkbgStorageStack/SavedReportsTable/Resource"
+   }
+  },
+  "ConfigTable5CD72349": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "config_key",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "KeySchema": [
+     {
+      "AttributeName": "config_key",
+      "KeyType": "HASH"
+     }
+    ],
+    "SSESpecification": {
+     "SSEEnabled": true
+    },
+    "TableName": "bbp-hkbg-config"
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "BbpHkbgStorageStack/ConfigTable/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/1WMzU7DMBCEn6U5O0tJcuJG+wBUDbcKIcdeqm1iG2XX/ZHld0dJQC2n+XZmZyqomhrWK33h0ti+HKiD1Io2vdIX/kxcQ9pE06Oo7Zf/pUV2YSBzu9vLfUiFoyv54qV43JzGuIY5YngstKIFHXrhIn9kZW9eu2A7SO+6G3CanyFntY0swe2RQxzNnNz5X7Qbw5ksjhvNqF6ZUVrRR/LHqfMW5TuK+vvNygeLcOKnc9XAcwPr1YmJyjF6IYewX/QHVLIqiigBAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "BbpHkbgStorageStack/CDKMetadata/Default"
+   },
+   "Condition": "CDKMetadataAvailable"
+  }
+ },
+ "Outputs": {
+  "DocumentsBucketName": {
+   "Value": {
+    "Ref": "DocumentsBucket9EC9DEB9"
+   },
+   "Export": {
+    "Name": "BbpHkbgDocumentsBucketName"
+   }
+  },
+  "DocumentsBucketArn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "DocumentsBucket9EC9DEB9",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgDocumentsBucketArn"
+   }
+  },
+  "StaticSiteBucketName": {
+   "Value": {
+    "Ref": "StaticSiteBucket8958EE3F"
+   },
+   "Export": {
+    "Name": "BbpHkbgStaticSiteBucketName"
+   }
+  },
+  "StaticSiteUrl": {
+   "Value": {
+    "Fn::GetAtt": [
+     "StaticSiteBucket8958EE3F",
+     "WebsiteURL"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgStaticSiteUrl"
+   }
+  },
+  "ApplicationsTableName": {
+   "Value": {
+    "Ref": "ApplicationsTable27AC2163"
+   },
+   "Export": {
+    "Name": "BbpHkbgApplicationsTableName"
+   }
+  },
+  "ApplicationsTableArn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "ApplicationsTable27AC2163",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgApplicationsTableArn"
+   }
+  },
+  "AuditLogTableName": {
+   "Value": {
+    "Ref": "AuditLogTable8B03E3C8"
+   },
+   "Export": {
+    "Name": "BbpHkbgAuditLogTableName"
+   }
+  },
+  "AuditLogTableArn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "AuditLogTable8B03E3C8",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgAuditLogTableArn"
+   }
+  },
+  "UsersTableName": {
+   "Value": {
+    "Ref": "UsersTable9725E9C8"
+   },
+   "Export": {
+    "Name": "BbpHkbgUsersTableName"
+   }
+  },
+  "UsersTableArn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "UsersTable9725E9C8",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgUsersTableArn"
+   }
+  },
+  "SavedReportsTableName": {
+   "Value": {
+    "Ref": "SavedReportsTable9E991FF8"
+   },
+   "Export": {
+    "Name": "BbpHkbgSavedReportsTableName"
+   }
+  },
+  "SavedReportsTableArn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "SavedReportsTable9E991FF8",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgSavedReportsTableArn"
+   }
+  },
+  "ConfigTableName": {
+   "Value": {
+    "Ref": "ConfigTable5CD72349"
+   },
+   "Export": {
+    "Name": "BbpHkbgConfigTableName"
+   }
+  },
+  "ConfigTableArn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "ConfigTable5CD72349",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgConfigTableArn"
+   }
+  },
+  "ExportsOutputFnGetAttApplicationsTable27AC2163Arn2EBCB236": {
+   "Value": {
+    "Fn::GetAtt": [
+     "ApplicationsTable27AC2163",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputFnGetAttApplicationsTable27AC2163Arn2EBCB236"
+   }
+  },
+  "ExportsOutputFnGetAttAuditLogTable8B03E3C8Arn985A1088": {
+   "Value": {
+    "Fn::GetAtt": [
+     "AuditLogTable8B03E3C8",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputFnGetAttAuditLogTable8B03E3C8Arn985A1088"
+   }
+  },
+  "ExportsOutputRefApplicationsTable27AC2163EA08CD35": {
+   "Value": {
+    "Ref": "ApplicationsTable27AC2163"
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputRefApplicationsTable27AC2163EA08CD35"
+   }
+  },
+  "ExportsOutputRefAuditLogTable8B03E3C8EAC7CA55": {
+   "Value": {
+    "Ref": "AuditLogTable8B03E3C8"
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputRefAuditLogTable8B03E3C8EAC7CA55"
+   }
+  },
+  "ExportsOutputFnGetAttDocumentsBucket9EC9DEB9ArnEA5095A7": {
+   "Value": {
+    "Fn::GetAtt": [
+     "DocumentsBucket9EC9DEB9",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputFnGetAttDocumentsBucket9EC9DEB9ArnEA5095A7"
+   }
+  },
+  "ExportsOutputRefDocumentsBucket9EC9DEB9131399C0": {
+   "Value": {
+    "Ref": "DocumentsBucket9EC9DEB9"
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputRefDocumentsBucket9EC9DEB9131399C0"
+   }
+  },
+  "ExportsOutputFnGetAttUsersTable9725E9C8Arn5684EF99": {
+   "Value": {
+    "Fn::GetAtt": [
+     "UsersTable9725E9C8",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputFnGetAttUsersTable9725E9C8Arn5684EF99"
+   }
+  },
+  "ExportsOutputRefUsersTable9725E9C857961836": {
+   "Value": {
+    "Ref": "UsersTable9725E9C8"
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputRefUsersTable9725E9C857961836"
+   }
+  },
+  "ExportsOutputFnGetAttSavedReportsTable9E991FF8Arn2E4501F7": {
+   "Value": {
+    "Fn::GetAtt": [
+     "SavedReportsTable9E991FF8",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputFnGetAttSavedReportsTable9E991FF8Arn2E4501F7"
+   }
+  },
+  "ExportsOutputRefSavedReportsTable9E991FF882E1C390": {
+   "Value": {
+    "Ref": "SavedReportsTable9E991FF8"
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputRefSavedReportsTable9E991FF882E1C390"
+   }
+  },
+  "ExportsOutputFnGetAttConfigTable5CD72349Arn5AD5B2DA": {
+   "Value": {
+    "Fn::GetAtt": [
+     "ConfigTable5CD72349",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputFnGetAttConfigTable5CD72349Arn5AD5B2DA"
+   }
+  },
+  "ExportsOutputRefConfigTable5CD7234972E583FB": {
+   "Value": {
+    "Ref": "ConfigTable5CD72349"
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputRefConfigTable5CD7234972E583FB"
+   }
+  },
+  "ExportsOutputRefStaticSiteBucket8958EE3FA2C90592": {
+   "Value": {
+    "Ref": "StaticSiteBucket8958EE3F"
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputRefStaticSiteBucket8958EE3FA2C90592"
+   }
+  },
+  "ExportsOutputFnGetAttStaticSiteBucket8958EE3FArn001B5304": {
+   "Value": {
+    "Fn::GetAtt": [
+     "StaticSiteBucket8958EE3F",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "BbpHkbgStorageStack:ExportsOutputFnGetAttStaticSiteBucket8958EE3FArn001B5304"
+   }
+  }
+ },
+ "Conditions": {
+  "CDKMetadataAvailable": {
+   "Fn::Or": [
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "af-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-3"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-4"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-northwest-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-2"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "il-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "sa-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-west-1"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Equals": [
+      {
+       "Ref": "AWS::Region"
+      },
+      "us-west-2"
+     ]
+    }
+   ]
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

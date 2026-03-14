@@ -1,0 +1,86 @@
+{
+  "/BbpHkbgCiCdStack/GitHubOrg": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "GitHubOrg"
+    }
+  ],
+  "/BbpHkbgCiCdStack/GitHubRepo": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "GitHubRepo"
+    }
+  ],
+  "/BbpHkbgCiCdStack/Custom::AWSCDKOpenIdConnectProviderCustomResourceProvider": [
+    {
+      "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+      "data": true
+    }
+  ],
+  "/BbpHkbgCiCdStack/GitHubActionsRoleArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "GitHubActionsRoleArn"
+    }
+  ],
+  "/BbpHkbgCiCdStack/OidcProviderArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "OidcProviderArn"
+    }
+  ],
+  "/BbpHkbgCiCdStack/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    }
+  ],
+  "/BbpHkbgCiCdStack/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    }
+  ],
+  "/BbpHkbgCiCdStack/Custom::AWSCDKOpenIdConnectProviderCustomResourceProvider/Role": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CustomAWSCDKOpenIdConnectProviderCustomResourceProviderRole517FED65"
+    }
+  ],
+  "/BbpHkbgCiCdStack/Custom::AWSCDKOpenIdConnectProviderCustomResourceProvider/Handler": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CustomAWSCDKOpenIdConnectProviderCustomResourceProviderHandlerF2C543E0"
+    }
+  ],
+  "/BbpHkbgCiCdStack/GitHubActionsDeployRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "GitHubActionsDeployRoleA6F4AD3D"
+    }
+  ],
+  "/BbpHkbgCiCdStack/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    }
+  ],
+  "/BbpHkbgCiCdStack/CDKMetadata/Condition": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadataAvailable"
+    }
+  ],
+  "/BbpHkbgCiCdStack/GitHubOidcProvider/Resource/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "GitHubOidcProvider7EBF861F"
+    }
+  ],
+  "/BbpHkbgCiCdStack/GitHubActionsDeployRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "GitHubActionsDeployRoleDefaultPolicy3AC475A7"
+    }
+  ]
+}
