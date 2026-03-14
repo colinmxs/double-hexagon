@@ -391,8 +391,8 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 11.2, 11.3, 11.4, 11.8, 11.14_
     - _Agent Skills: `lambda`, `dynamodb`_
 
-- [ ] 21. Frontend — Reports section
-  - [ ] 21.1 Implement Reports UI with custom report builder
+- [x] 21. Frontend — Reports section
+  - [x] 21.1 Implement Reports UI with custom report builder
     - Column picker from all application fields
     - Multi-filter builder with field-type-appropriate operators
     - Group-by selector with aggregate counts
@@ -403,7 +403,7 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.7, 11.13, 11.14_
     - _Agent Skills: `vue-best-practices`_
 
-  - [ ] 21.2 Implement charts, saved reports, and pre-built templates
+  - [x] 21.2 Implement charts, saved reports, and pre-built templates
     - Bar chart and pie chart for grouped data
     - Save/load/edit/delete saved report configurations
     - Pre-built templates: Height Distribution, Applications by Referring Agency, Applications by Zip Code, Age Distribution, Color Preferences, Language Distribution, Transportation Access Summary, Review Status Summary
@@ -412,7 +412,7 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 11.6, 11.8, 11.9, 11.10, 11.11, 11.12, 17.5_
     - _Agent Skills: `vue-best-practices`_
 
-  - [ ] 21.3 Write unit tests for Reports UI
+  - [x] 21.3 Write unit tests for Reports UI
     - Test filter builder
     - Test chart rendering
     - Test saved report load/save
@@ -420,8 +420,8 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 11.6, 11.8, 11.10, 11.12_
     - _Agent Skills: `vue-testing-best-practices`_
 
-- [ ] 22. Backend — Cost Dashboard Lambda (Python)
-  - [ ] 22.1 Implement `get_cost_data` Lambda
+- [x] 22. Backend — Cost Dashboard Lambda (Python)
+  - [x] 22.1 Implement `get_cost_data` Lambda
     - Fetch cost data from AWS Cost Explorer API broken down by service (S3, CloudFront, Lambda, API Gateway, DynamoDB, Textract, Bedrock)
     - Return month-over-month trend for previous 6 months
     - Compute applications processed in current month and average cost per application
@@ -429,19 +429,19 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 13.2, 13.3, 13.4, 13.7, 13.8_
     - _Agent Skills: `lambda`, `aws-cost-operations`, `dynamodb`_
 
-  - [ ] 22.2 Implement budget threshold read/update endpoint
+  - [x] 22.2 Implement budget threshold read/update endpoint
     - Read and update monthly cost budget threshold from Config table
     - _Requirements: 13.5_
     - _Agent Skills: `lambda`, `dynamodb`, `api-gateway`_
 
-  - [ ] 22.3 Write unit tests for cost dashboard Lambda
+  - [x] 22.3 Write unit tests for cost dashboard Lambda
     - Test cost data caching (refresh at most once per day)
     - Test budget threshold comparison
     - _Requirements: 13.7, 13.8_
     - _Agent Skills: `lambda`, `aws-cost-operations`_
 
-- [ ] 23. Frontend — Cost Dashboard UI
-  - [ ] 23.1 Implement Cost Dashboard component
+- [x] 23. Frontend — Cost Dashboard UI
+  - [x] 23.1 Implement Cost Dashboard component
     - Service-level cost breakdown display
     - 6-month trend chart (month-over-month)
     - Applications processed count and cost-per-application
@@ -451,8 +451,8 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6_
     - _Agent Skills: `vue-best-practices`_
 
-- [ ] 24. Backend — Access Management Lambda functions (Python)
-  - [ ] 24.1 Implement `manage_users` Lambda
+- [x] 24. Backend — Access Management Lambda functions (Python)
+  - [x] 24.1 Implement `manage_users` Lambda
     - Create user: create in Cognito User Pool + DynamoDB Users table, assign role
     - Update user: update role, authorized giveaway years (for reporters)
     - Deactivate user: disable in Cognito + set status inactive in DynamoDB; immediately reject subsequent requests
@@ -464,15 +464,15 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.7, 14.8, 14.9, 15.1_
     - _Agent Skills: `lambda`, `cognito`, `dynamodb`_
 
-  - [ ] 24.2 Write unit tests for access management Lambda
+  - [x] 24.2 Write unit tests for access management Lambda
     - Test user CRUD operations
     - Test role assignment and giveaway year scoping for reporters
     - Test deactivation immediately rejects requests
     - _Requirements: 14.2, 14.5, 14.8_
     - _Agent Skills: `lambda`, `cognito`, `dynamodb`_
 
-- [ ] 25. Frontend — Access Management UI
-  - [ ] 25.1 Implement Access Management component
+- [x] 25. Frontend — Access Management UI
+  - [x] 25.1 Implement Access Management component
     - User list table: name, email, role, authorized giveaway years, status, last login
     - Create user form (linked to Cognito)
     - Edit user: role assignment, giveaway year selection for reporters
@@ -482,22 +482,22 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.7, 14.8, 14.9_
     - _Agent Skills: `vue-best-practices`_
 
-- [ ] 26. Backend — Audit Log Lambda (Python)
-  - [ ] 26.1 Implement `get_audit_log` Lambda
+- [x] 26. Backend — Audit Log Lambda (Python)
+  - [x] 26.1 Implement `get_audit_log` Lambda
     - Query audit log entries in reverse chronological order
     - Support filters: user, action type, resource type, date range
     - Support CSV export of filtered entries
     - _Requirements: 15.6, 15.7, 15.8, 15.9_
     - _Agent Skills: `lambda`, `dynamodb`_
 
-  - [ ] 26.2 Write unit tests for audit log Lambda
+  - [x] 26.2 Write unit tests for audit log Lambda
     - Test filtering by user, action type, resource type, date range
     - Test CSV export format
     - _Requirements: 15.7, 15.8, 15.9_
     - _Agent Skills: `lambda`, `dynamodb`_
 
-- [ ] 27. Frontend — Audit Log UI
-  - [ ] 27.1 Implement Audit Log Viewer component
+- [x] 27. Frontend — Audit Log UI
+  - [x] 27.1 Implement Audit Log Viewer component
     - Reverse-chronological table: timestamp, user name, action type, resource type, resource ID
     - Filters: user, action type, resource type, date range
     - CSV export of filtered entries
@@ -505,8 +505,8 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 15.6, 15.7, 15.8, 15.9_
     - _Agent Skills: `vue-best-practices`_
 
-- [ ] 28. Backend — Giveaway Year Lifecycle Lambda (Python)
-  - [ ] 28.1 Implement `manage_giveaway_year` Lambda
+- [x] 28. Backend — Giveaway Year Lifecycle Lambda (Python)
+  - [x] 28.1 Implement `manage_giveaway_year` Lambda
     - List giveaway years
     - Set active giveaway year in Config table
     - Archive year: mark all application records as read-only, move uploaded documents to S3 Glacier
@@ -514,15 +514,15 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 17.1, 17.2, 17.6, 17.7, 17.8, 17.9, 17.10, 17.11_
     - _Agent Skills: `lambda`, `dynamodb`, `s3`_
 
-  - [ ] 28.2 Write unit tests for giveaway year Lambda
+  - [x] 28.2 Write unit tests for giveaway year Lambda
     - Test archive marks records read-only and transitions S3 to Glacier
     - Test delete removes all DynamoDB records and S3 objects
     - Test audit log recording for delete action
     - _Requirements: 17.7, 17.8, 17.9, 17.10, 17.11_
     - _Agent Skills: `lambda`, `dynamodb`, `s3`_
 
-- [ ] 29. Frontend — Giveaway Year Management UI
-  - [ ] 29.1 Implement Giveaway Year Management component
+- [x] 29. Frontend — Giveaway Year Management UI
+  - [x] 29.1 Implement Giveaway Year Management component
     - List giveaway years with active indicator
     - Set active year control
     - Archive year action
@@ -531,7 +531,7 @@ This plan implements a serverless web application for the Boise Bicycle Project'
     - _Requirements: 17.2, 17.3, 17.4, 17.6, 17.9, 17.10_
     - _Agent Skills: `vue-best-practices`_
 
-- [ ] 30. Checkpoint — All admin features
+- [x] 30. Checkpoint — All admin features
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 31. CI/CD — GitHub Actions pipelines
