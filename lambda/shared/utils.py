@@ -20,6 +20,7 @@ import logging
 import os
 import time
 import uuid
+from decimal import Decimal
 
 import boto3
 
@@ -69,7 +70,7 @@ def get_dynamodb_table(table_name):
     return dynamodb.Table(table_name)
 
 
-def generate_presigned_url(bucket_name, object_key, expiry_seconds=900):
+def generate_presigned_url(bucket_name, object_key, content_type=None, expiry_seconds=900):
     """Generate a pre-signed S3 PUT URL for file uploads.
 
     Default expiry is 15 minutes (900 seconds) per Requirement 16.9.
@@ -77,15 +78,19 @@ def generate_presigned_url(bucket_name, object_key, expiry_seconds=900):
     Args:
         bucket_name: S3 bucket name.
         object_key: S3 object key.
+        content_type: MIME type for the upload (e.g. 'image/png').
         expiry_seconds: URL expiry in seconds (default 900 = 15 minutes).
 
     Returns:
         str: Pre-signed PUT URL.
     """
     s3_client = boto3.client("s3")
+    params = {"Bucket": bucket_name, "Key": object_key}
+    if content_type:
+        params["ContentType"] = content_type
     url = s3_client.generate_presigned_url(
         "put_object",
-        Params={"Bucket": bucket_name, "Key": object_key},
+        Params=params,
         ExpiresIn=expiry_seconds,
     )
     return url
@@ -130,6 +135,15 @@ def generate_application_id():
     return f"{time_part}{random_part}"
 
 
+class _DecimalEncoder(json.JSONEncoder):
+    """JSON encoder that converts Decimal to int or float for API responses."""
+
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return int(o) if o % 1 == 0 else float(o)
+        return super().default(o)
+
+
 def build_success_response(body, status_code=200, event=None):
     """Build an API Gateway proxy success response with JSON body and CORS headers.
 
@@ -145,7 +159,7 @@ def build_success_response(body, status_code=200, event=None):
     return {
         "statusCode": status_code,
         "headers": {**_get_cors_headers(origin), "Content-Type": "application/json"},
-        "body": json.dumps(body),
+        "body": json.dumps(body, cls=_DecimalEncoder),
     }
 
 

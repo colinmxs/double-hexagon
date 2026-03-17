@@ -59,6 +59,34 @@ export class ApiStack extends cdk.Stack {
 
     const lambdaDir = path.join(__dirname, '..', '..', 'lambda');
 
+    /**
+     * Bundle a Lambda function's code with the shared/ directory included.
+     * Each handler does sys.path.insert(0, 'shared') so shared/ must be
+     * a sibling directory in the deployment package.
+     */
+    function bundledCode(functionDir: string): lambda.Code {
+      return lambda.Code.fromAsset(lambdaDir, {
+        bundling: {
+          image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+          command: [
+            'bash', '-c',
+            `cp -r /asset-input/${functionDir}/* /asset-output/ && cp -r /asset-input/shared /asset-output/shared`,
+          ],
+          local: {
+            tryBundle(outputDir: string): boolean {
+              const fs = require('fs');
+              const { execSync } = require('child_process');
+              const srcDir = path.join(lambdaDir, functionDir);
+              if (!fs.existsSync(srcDir)) return false;
+              execSync(`cp -r ${srcDir}/* ${outputDir}/`);
+              execSync(`cp -r ${path.join(lambdaDir, 'shared')} ${outputDir}/shared`);
+              return true;
+            },
+          },
+        },
+      });
+    }
+
     // ---------------------------------------------------------------
     // REST API
     // ---------------------------------------------------------------
@@ -109,7 +137,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-submit-application',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'submit_application')),
+      code: bundledCode('submit_application'),
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
       environment: {
@@ -127,7 +155,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-generate-presigned-url',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'generate_presigned_url')),
+      code: bundledCode('generate_presigned_url'),
       timeout: cdk.Duration.seconds(15),
       memorySize: 128,
       environment: {
@@ -142,7 +170,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-process-document',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'process_document')),
+      code: bundledCode('process_document'),
       timeout: cdk.Duration.minutes(5),
       memorySize: 512,
       environment: {
@@ -171,7 +199,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-get-applications',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'get_applications')),
+      code: bundledCode('get_applications'),
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
       environment: {
@@ -189,7 +217,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-get-application-detail',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'get_application_detail')),
+      code: bundledCode('get_application_detail'),
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
       environment: {
@@ -209,7 +237,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-update-application',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'update_application')),
+      code: bundledCode('update_application'),
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
       environment: {
@@ -229,7 +257,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-export-data',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'export_data')),
+      code: bundledCode('export_data'),
       timeout: cdk.Duration.seconds(60),
       memorySize: 256,
       environment: {
@@ -247,7 +275,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-manage-reports',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'manage_reports')),
+      code: bundledCode('manage_reports'),
       timeout: cdk.Duration.seconds(15),
       memorySize: 128,
       environment: {
@@ -263,7 +291,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-run-report',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'run_report')),
+      code: bundledCode('run_report'),
       timeout: cdk.Duration.seconds(60),
       memorySize: 256,
       environment: {
@@ -281,7 +309,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-get-cost-data',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'get_cost_data')),
+      code: bundledCode('get_cost_data'),
       timeout: cdk.Duration.seconds(30),
       memorySize: 128,
       environment: {
@@ -301,7 +329,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-manage-users',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'manage_users')),
+      code: bundledCode('manage_users'),
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
       environment: {
@@ -332,7 +360,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-get-audit-log',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'get_audit_log')),
+      code: bundledCode('get_audit_log'),
       timeout: cdk.Duration.seconds(30),
       memorySize: 128,
       environment: {
@@ -348,7 +376,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-manage-giveaway-year',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'manage_giveaway_year')),
+      code: bundledCode('manage_giveaway_year'),
       timeout: cdk.Duration.minutes(5),
       memorySize: 256,
       environment: {
@@ -375,7 +403,7 @@ export class ApiStack extends cdk.Stack {
       functionName: 'bbp-hkbg-get-auth-me',
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(lambdaDir, 'get_auth_me')),
+      code: bundledCode('get_auth_me'),
       timeout: cdk.Duration.seconds(15),
       memorySize: 128,
       environment: {

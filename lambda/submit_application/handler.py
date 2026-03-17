@@ -30,6 +30,18 @@ from utils import (
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+
+def _floats_to_decimals(obj):
+    """Recursively convert float values to Decimal for DynamoDB storage."""
+    from decimal import Decimal
+    if isinstance(obj, float):
+        return Decimal(str(obj))
+    if isinstance(obj, dict):
+        return {k: _floats_to_decimals(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_floats_to_decimals(i) for i in obj]
+    return obj
+
 # Required referring_agency fields
 REQUIRED_AGENCY_FIELDS = ["agency_name", "contact_name", "contact_phone", "contact_email"]
 
@@ -236,7 +248,7 @@ def handler(event, context):
     try:
         table_name = os.environ.get("APPLICATIONS_TABLE_NAME", "bbp-hkbg-applications")
         table = get_dynamodb_table(table_name)
-        table.put_item(Item=application_record)
+        table.put_item(Item=_floats_to_decimals(application_record))
     except Exception:
         logger.exception("Failed to store application in DynamoDB")
         return build_error_response(500, "Failed to store application")

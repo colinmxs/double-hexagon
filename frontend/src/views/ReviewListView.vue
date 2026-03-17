@@ -16,6 +16,7 @@ interface ApplicationChild {
 interface Application {
   giveaway_year: string
   application_id: string
+  family_name?: string
   submission_timestamp: string
   source_type: 'upload' | 'digital'
   status: 'needs_review' | 'auto_approved' | 'manually_approved' | 'extraction_failed'
@@ -65,8 +66,9 @@ const exportError = ref('')
 const exportSuccess = ref('')
 
 function getFamilyName(app: Application): string {
+  if (app.family_name) return app.family_name
   const pg = app.parent_guardian
-  return pg ? `${pg.last_name}, ${pg.first_name}` : ''
+  return pg?.last_name ?? ''
 }
 
 function getDrawingThumbnailUrl(app: Application): string | null {

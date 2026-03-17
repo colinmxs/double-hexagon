@@ -115,7 +115,7 @@ def handler(event, context):
     # Generate pre-signed PUT URL with 15-minute expiry (Requirement 16.9)
     bucket_name = os.environ.get("DOCUMENTS_BUCKET", "bbp-hkbg-documents")
     try:
-        presigned_url = generate_presigned_url(bucket_name, s3_key, expiry_seconds=900)
+        presigned_url = generate_presigned_url(bucket_name, s3_key, content_type=file_type, expiry_seconds=900)
     except Exception:
         logger.exception("Failed to generate pre-signed URL")
         return build_error_response(500, "Failed to generate upload URL")

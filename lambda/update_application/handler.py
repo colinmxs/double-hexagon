@@ -73,17 +73,36 @@ def _save_version_to_s3(bucket, giveaway_year, application_id, version, record):
     return s3_key
 
 
+import re
+
+_ARRAY_KEY_RE = re.compile(r"^(\w+)\[(\d+)]$")
+
+
+def _resolve_key(obj, key):
+    """Resolve a single path segment, handling both dict keys and array indices like 'children[0]'."""
+    m = _ARRAY_KEY_RE.match(key)
+    if m:
+        arr_name, idx = m.group(1), int(m.group(2))
+        arr = obj.get(arr_name) if isinstance(obj, dict) else None
+        if isinstance(arr, list) and 0 <= idx < len(arr):
+            return arr[idx]
+        return None
+    if isinstance(obj, dict):
+        return obj.get(key)
+    return None
+
+
 def _get_nested_value(obj, field_path):
     """Get a value from a nested dict using dot-notation path.
 
-    Supports paths like 'parent_guardian.phone' and 'referring_agency.agency_name'.
+    Supports paths like 'parent_guardian.phone', 'referring_agency.agency_name',
+    and array-indexed paths like 'children[0].first_name'.
     """
     keys = field_path.split(".")
     current = obj
     for key in keys:
-        if isinstance(current, dict):
-            current = current.get(key)
-        else:
+        current = _resolve_key(current, key)
+        if current is None:
             return None
     return current
 
@@ -91,15 +110,34 @@ def _get_nested_value(obj, field_path):
 def _set_nested_value(obj, field_path, value):
     """Set a value in a nested dict using dot-notation path.
 
-    Creates intermediate dicts if they don't exist.
+    Supports array-indexed paths like 'children[0].first_name'.
+    Creates intermediate dicts if they don't exist (but not arrays).
     """
     keys = field_path.split(".")
     current = obj
     for key in keys[:-1]:
-        if key not in current or not isinstance(current[key], dict):
-            current[key] = {}
-        current = current[key]
-    current[keys[-1]] = value
+        m = _ARRAY_KEY_RE.match(key)
+        if m:
+            arr_name, idx = m.group(1), int(m.group(2))
+            arr = current.get(arr_name) if isinstance(current, dict) else None
+            if isinstance(arr, list) and 0 <= idx < len(arr):
+                current = arr[idx]
+            else:
+                return  # can't navigate into missing array element
+        else:
+            if key not in current or not isinstance(current[key], dict):
+                current[key] = {}
+            current = current[key]
+    # Set the final key
+    last = keys[-1]
+    m = _ARRAY_KEY_RE.match(last)
+    if m:
+        arr_name, idx = m.group(1), int(m.group(2))
+        arr = current.get(arr_name) if isinstance(current, dict) else None
+        if isinstance(arr, list) and 0 <= idx < len(arr):
+            arr[idx] = value
+    else:
+        current[last] = value
 
 
 def _apply_field_updates(application, field_updates, field_confidence):

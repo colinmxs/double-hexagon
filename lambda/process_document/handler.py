@@ -31,6 +31,7 @@ import logging
 import os
 import sys
 from datetime import datetime, timezone
+from decimal import Decimal
 
 import boto3
 from botocore.exceptions import ClientError
@@ -43,6 +44,17 @@ from utils import generate_application_id, get_dynamodb_table
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+
+def _floats_to_decimals(obj):
+    """Recursively convert float values to Decimal for DynamoDB storage."""
+    if isinstance(obj, float):
+        return Decimal(str(obj))
+    if isinstance(obj, dict):
+        return {k: _floats_to_decimals(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_floats_to_decimals(i) for i in obj]
+    return obj
 
 # AWS clients (module-level for reuse across invocations)
 textract_client = None
@@ -755,6 +767,7 @@ def _build_application_record(merged, bucket, key, giveaway_year):
 
     # Compute overall confidence as minimum of all field scores
     fc = merged.get("field_confidence", {})
+    record["field_confidence"] = fc
     if fc:
         record["overall_confidence_score"] = round(min(fc.values()), 4)
 
@@ -782,7 +795,7 @@ def _get_confidence_threshold():
     Falls back to DEFAULT_CONFIDENCE_THRESHOLD (0.80) if not configured.
 
     Returns:
-        float: Confidence threshold between 0.0 and 1.0.
+        Decimal: Confidence threshold between 0.0 and 1.0.
     """
     try:
         config_table = os.environ.get("CONFIG_TABLE_NAME", "bbp-hkbg-config")
@@ -1646,7 +1659,7 @@ def handler(event, context):
             "overall_confidence=%.4f",
             application_id,
             record.get("status"),
-            record.get("overall_confidence_score", 0.0),
+            float(record.get("overall_confidence_score", 0)),
         )
     except Exception as exc:
         logger.exception("Bedrock interpretation failed for %s", application_id)
@@ -1676,7 +1689,7 @@ def handler(event, context):
             "APPLICATIONS_TABLE_NAME", "bbp-hkbg-applications"
         )
         table = get_dynamodb_table(table_name)
-        table.put_item(Item=record)
+        table.put_item(Item=_floats_to_decimals(record))
     except Exception:
         logger.exception("Failed to store application in DynamoDB")
         return {"statusCode": 500, "body": "Failed to store application"}
@@ -1696,7 +1709,7 @@ def handler(event, context):
                 "detected_language": merged.get("detected_language", "en"),
                 "pages_processed": len(page_results),
                 "status": record.get("status"),
-                "overall_confidence": record.get("overall_confidence_score", 0.0),
+                "overall_confidence": float(record.get("overall_confidence_score", 0)),
             },
         )
     except Exception:
@@ -1710,7 +1723,7 @@ def handler(event, context):
             "pages_processed": len(page_results),
             "detected_language": merged.get("detected_language", "en"),
             "status": record.get("status"),
-            "overall_confidence_score": record.get("overall_confidence_score", 0.0),
+            "overall_confidence_score": float(record.get("overall_confidence_score", 0)),
         }),
     }
 
@@ -1752,7 +1765,7 @@ def _store_failed_record(bucket, key, giveaway_year, error_msg):
             "APPLICATIONS_TABLE_NAME", "bbp-hkbg-applications"
         )
         table = get_dynamodb_table(table_name)
-        table.put_item(Item=record)
+        table.put_item(Item=_floats_to_decimals(record))
     except Exception:
         logger.exception("Failed to store extraction_failed record")
 

@@ -177,7 +177,8 @@ async function fetchApplication() {
     const url = `${API_BASE}/applications/${applicationId.value}?giveaway_year=${giveawayYear.value}`
     const res = await fetch(url)
     if (!res.ok) throw new Error('Failed to fetch')
-    application.value = await res.json()
+    const data = await res.json()
+    application.value = data.application ?? data
     // Initialize localConfidence from server data
     if (application.value?.field_confidence) {
       Object.entries(application.value.field_confidence).forEach(([k, v]) => {
@@ -200,7 +201,6 @@ async function saveChanges() {
   try {
     // Build the update payload from editedFields
     const updates: Record<string, unknown> = {}
-    const confidenceUpdates: Record<string, number> = {}
 
     for (const [key, value] of Object.entries(editedFields)) {
       // Handle drawing_keywords: convert comma string back to array
@@ -209,7 +209,6 @@ async function saveChanges() {
       } else {
         updates[key] = value
       }
-      confidenceUpdates[key] = 1.0
     }
 
     const res = await fetch(`${API_BASE}/applications/${applicationId.value}`, {
@@ -217,8 +216,7 @@ async function saveChanges() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         giveaway_year: giveawayYear.value,
-        updates,
-        confidence_updates: confidenceUpdates,
+        field_updates: updates,
       }),
     })
 
@@ -261,30 +259,6 @@ async function approveApplication() {
   } finally {
     isApproving.value = false
   }
-}
-
-async function saveBikeNumber(childId: string, index: number) {
-  const key = `children[${index}].bike_number`
-  const value = getFieldValue(key, '') as string
-  try {
-    await fetch(`${API_BASE}/applications/${applicationId.value}/children/${childId}/bike-number`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ giveaway_year: giveawayYear.value, bike_number: value }),
-    })
-  } catch { /* handled by general save */ }
-}
-
-async function saveDrawingKeywords(childId: string, index: number) {
-  const raw = getChildKeywordsString(index)
-  const keywords = raw.split(',').map((s) => s.trim()).filter(Boolean)
-  try {
-    await fetch(`${API_BASE}/applications/${applicationId.value}/children/${childId}/drawing-keywords`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ giveaway_year: giveawayYear.value, drawing_keywords: keywords }),
-    })
-  } catch { /* handled by general save */ }
 }
 
 function goBack() {
@@ -540,7 +514,6 @@ onMounted(fetchApplication)
                 type="text"
                 :value="getFieldValue(`children[${idx}].bike_number`, '')"
                 @input="onFieldEdit(`children[${idx}].bike_number`, ($event.target as HTMLInputElement).value)"
-                @blur="saveBikeNumber(child.child_id, idx)"
               />
             </div>
           </div>
@@ -586,7 +559,6 @@ onMounted(fetchApplication)
                 :placeholder="t('reviewDetail.drawingKeywordsHelp')"
                 :value="getChildKeywordsString(idx)"
                 @input="onKeywordsEdit(idx, ($event.target as HTMLInputElement).value)"
-                @blur="saveDrawingKeywords(child.child_id, idx)"
               />
             </div>
           </div>

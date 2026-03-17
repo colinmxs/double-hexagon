@@ -109,9 +109,9 @@ async function uploadSingleFile(entry: UploadFile): Promise<void> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        fileName: entry.file.name,
-        fileType: entry.file.type,
-        fileSize: entry.file.size,
+        file_name: entry.file.name,
+        file_type: entry.file.type,
+        file_size: entry.file.size,
       }),
     })
 
@@ -121,7 +121,9 @@ async function uploadSingleFile(entry: UploadFile): Promise<void> {
       return
     }
 
-    const { uploadUrl, referenceId } = await presignRes.json()
+    const data = await presignRes.json()
+    const uploadUrl = data.upload_url
+    const referenceId = data.reference_id
 
     const uploadRes = await fetch(uploadUrl, {
       method: 'PUT',

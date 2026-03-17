@@ -109,6 +109,7 @@ def _format_application(application):
 
     item = {
         "application_id": application.get("application_id", ""),
+        "giveaway_year": application.get("giveaway_year", ""),
         "family_name": family_name,
         "submission_timestamp": application.get("submission_timestamp", ""),
         "source_type": application.get("source_type", ""),
