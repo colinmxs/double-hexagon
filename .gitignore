@@ -1,0 +1,6 @@
+infra/node_modules/*
+__pycache__/
+infra/cdk.out/*
+
+# Secrets — never commit
+.env

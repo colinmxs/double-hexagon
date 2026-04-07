@@ -1,0 +1,290 @@
+"""Shared backend utilities for all Lambda functions.
+
+Provides:
+- CORS_HEADERS: Standard CORS headers dict for API Gateway responses.
+- get_dynamodb_table(table_name): Returns a boto3 DynamoDB Table resource.
+- generate_presigned_url(bucket, key, expiry): Pre-signed S3 PUT URL (15-min default).
+- generate_presigned_get_url(bucket, key, expiry): Pre-signed S3 GET URL (15-min default).
+- generate_application_id(): ULID-like unique ID using time + uuid.
+- build_success_response(body, status_code): API Gateway success response with CORS.
+- build_error_response(status_code, message): API Gateway error response, no PII.
+- parse_request_body(event): Safely parse JSON body from API Gateway event.
+- get_path_parameter(event, param_name): Extract path parameter from event.
+- get_query_parameter(event, param_name, default): Extract query string parameter.
+- generate_reference_number(giveaway_year): Sequential reference number via atomic counter.
+
+Requirements: 9.4, 16.9, 16.10, R2.1, R2.2
+"""
+
+import json
+import logging
+import os
+import time
+import uuid
+from decimal import Decimal
+
+import boto3
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+ALLOWED_ORIGINS = os.environ.get(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:4173",
+).split(",")
+
+
+def _get_cors_headers(origin=None):
+    """Return CORS headers, reflecting the request origin if it is allowed.
+
+    If ALLOWED_ORIGINS contains '*', any origin is accepted.
+    Otherwise only origins present in the allow-list are reflected back.
+    """
+    if "*" in ALLOWED_ORIGINS:
+        allow_origin = "*"
+    elif origin and origin in ALLOWED_ORIGINS:
+        allow_origin = origin
+    else:
+        allow_origin = ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else ""
+    return {
+        "Access-Control-Allow-Origin": allow_origin,
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+        "Vary": "Origin",
+    }
+
+
+# Default CORS headers kept for backward compatibility with tests
+CORS_HEADERS = _get_cors_headers()
+
+
+def get_dynamodb_table(table_name):
+    """Return a boto3 DynamoDB Table resource.
+
+    Args:
+        table_name: Name of the DynamoDB table.
+
+    Returns:
+        boto3 DynamoDB Table resource.
+    """
+    dynamodb = boto3.resource("dynamodb")
+    return dynamodb.Table(table_name)
+
+
+def generate_presigned_url(bucket_name, object_key, content_type=None, expiry_seconds=900):
+    """Generate a pre-signed S3 PUT URL for file uploads.
+
+    Default expiry is 15 minutes (900 seconds) per Requirement 16.9.
+
+    Args:
+        bucket_name: S3 bucket name.
+        object_key: S3 object key.
+        content_type: MIME type for the upload (e.g. 'image/png').
+        expiry_seconds: URL expiry in seconds (default 900 = 15 minutes).
+
+    Returns:
+        str: Pre-signed PUT URL.
+    """
+    s3_client = boto3.client("s3")
+    params = {"Bucket": bucket_name, "Key": object_key}
+    if content_type:
+        params["ContentType"] = content_type
+    url = s3_client.generate_presigned_url(
+        "put_object",
+        Params=params,
+        ExpiresIn=expiry_seconds,
+    )
+    return url
+
+
+def generate_presigned_get_url(bucket_name, object_key, expiry_seconds=900):
+    """Generate a pre-signed S3 GET URL for file downloads.
+
+    Default expiry is 15 minutes (900 seconds).
+
+    Args:
+        bucket_name: S3 bucket name.
+        object_key: S3 object key.
+        expiry_seconds: URL expiry in seconds (default 900 = 15 minutes).
+
+    Returns:
+        str: Pre-signed GET URL.
+    """
+    s3_client = boto3.client("s3")
+    url = s3_client.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": bucket_name, "Key": object_key},
+        ExpiresIn=expiry_seconds,
+    )
+    return url
+
+
+def generate_application_id():
+    """Generate a ULID-like unique application ID.
+
+    Combines a millisecond timestamp prefix with a UUID suffix to produce
+    a time-sortable, unique identifier. No external library required.
+
+    Returns:
+        str: A unique ID string like "01JXXXXXXXXXX-<uuid4-hex>".
+    """
+    # Millisecond timestamp encoded as zero-padded hex (10 chars covers ~35 years)
+    timestamp_ms = int(time.time() * 1000)
+    time_part = format(timestamp_ms, "012x").upper()
+    # Random component from uuid4
+    random_part = uuid.uuid4().hex[:16].upper()
+    return f"{time_part}{random_part}"
+
+
+class _DecimalEncoder(json.JSONEncoder):
+    """JSON encoder that converts Decimal to int or float for API responses."""
+
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return int(o) if o % 1 == 0 else float(o)
+        return super().default(o)
+
+
+def build_success_response(body, status_code=200, event=None):
+    """Build an API Gateway proxy success response with JSON body and CORS headers.
+
+    Args:
+        body: Dict or list to serialize as JSON response body.
+        status_code: HTTP status code (default 200).
+        event: Optional API Gateway event to extract Origin header from.
+
+    Returns:
+        dict: API Gateway proxy response.
+    """
+    origin = _extract_origin(event)
+    return {
+        "statusCode": status_code,
+        "headers": {**_get_cors_headers(origin), "Content-Type": "application/json"},
+        "body": json.dumps(body, cls=_DecimalEncoder),
+    }
+
+
+def build_error_response(status_code, message, event=None):
+    """Build an API Gateway proxy error response with CORS headers.
+
+    Error messages must NEVER contain PII (Requirement 16.10).
+
+    Args:
+        status_code: HTTP status code (e.g. 400, 404, 500).
+        message: A safe, generic error message with no PII.
+        event: Optional API Gateway event to extract Origin header from.
+
+    Returns:
+        dict: API Gateway proxy response.
+    """
+    origin = _extract_origin(event)
+    return {
+        "statusCode": status_code,
+        "headers": {**_get_cors_headers(origin), "Content-Type": "application/json"},
+        "body": json.dumps({"error": message}),
+    }
+
+
+def _extract_origin(event):
+    """Extract the Origin header from an API Gateway event (case-insensitive)."""
+    if not event:
+        return None
+    headers = event.get("headers") or {}
+    # API Gateway may lowercase header names
+    return headers.get("origin") or headers.get("Origin")
+
+
+def parse_request_body(event):
+    """Safely parse JSON body from an API Gateway proxy event.
+
+    Handles both raw and base64-encoded bodies.
+
+    Args:
+        event: API Gateway Lambda proxy event dict.
+
+    Returns:
+        dict: Parsed JSON body.
+
+    Raises:
+        ValueError: If the body is missing, empty, or not valid JSON.
+    """
+    body = event.get("body")
+    if not body:
+        raise ValueError("Request body is missing or empty")
+
+    if event.get("isBase64Encoded"):
+        import base64
+
+        body = base64.b64decode(body).decode("utf-8")
+
+    try:
+        parsed = json.loads(body)
+    except (json.JSONDecodeError, TypeError) as exc:
+        raise ValueError("Invalid JSON in request body") from exc
+
+    if not isinstance(parsed, dict):
+        raise ValueError("Request body must be a JSON object")
+
+    return parsed
+
+
+def get_path_parameter(event, param_name):
+    """Extract a path parameter from an API Gateway proxy event.
+
+    Args:
+        event: API Gateway Lambda proxy event dict.
+        param_name: Name of the path parameter (e.g. "id").
+
+    Returns:
+        str or None: The parameter value, or None if not present.
+    """
+    path_params = event.get("pathParameters") or {}
+    return path_params.get(param_name)
+
+
+def get_query_parameter(event, param_name, default=None):
+    """Extract a query string parameter from an API Gateway proxy event.
+
+    Args:
+        event: API Gateway Lambda proxy event dict.
+        param_name: Name of the query parameter.
+        default: Default value if the parameter is not present.
+
+    Returns:
+        str or default: The parameter value, or default if not present.
+    """
+    query_params = event.get("queryStringParameters") or {}
+    return query_params.get(param_name, default)
+
+
+def generate_reference_number(giveaway_year, config_table_name=None):
+    """Generate a human-friendly sequential reference number for an application.
+
+    Uses an atomic counter in the config table (``next_ref_{year}`` key with
+    DynamoDB ``ADD`` operation) to guarantee uniqueness even under concurrent
+    Lambda invocations.
+
+    Format: ``{year}-{seq:04d}`` (e.g. ``2025-0247``).
+
+    Args:
+        giveaway_year: The giveaway year string (e.g. "2025").
+        config_table_name: Optional config table name override for testability.
+            Defaults to the ``CONFIG_TABLE_NAME`` env var or ``"bbp-hkbg-config"``.
+
+    Returns:
+        str: A reference number like ``2025-0001``.
+
+    Requirements: R2.1, R2.2
+    """
+    if config_table_name is None:
+        config_table_name = os.environ.get("CONFIG_TABLE_NAME", "bbp-hkbg-config")
+    config_table = get_dynamodb_table(config_table_name)
+    response = config_table.update_item(
+        Key={"config_key": f"next_ref_{giveaway_year}"},
+        UpdateExpression="ADD #v :inc",
+        ExpressionAttributeNames={"#v": "value"},
+        ExpressionAttributeValues={":inc": 1},
+        ReturnValues="UPDATED_NEW",
+    )
+    seq = int(response["Attributes"]["value"])
+    return f"{giveaway_year}-{seq:04d}"
